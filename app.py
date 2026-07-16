@@ -8,17 +8,25 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-db = mysql.connector.connect(
-    host=os.environ.get("MYSQLHOST", "localhost"),
-    user=os.environ.get("MYSQLUSER", "root"),
-    password=os.environ.get("MYSQLPASSWORD", ""),
-    database=os.environ.get("MYSQL_DATABASE", "property_app"),
-    port=int(os.environ.get("MYSQLPORT", 3306))
-)
+def get_db_connection():
+    global db, cursor
+    try:
+        db.ping(reconnect=True, attempts=3, delay=2)
+    except Exception:
+        db = mysql.connector.connect(
+            host=os.environ.get("MYSQLHOST", "localhost"),
+            user=os.environ.get("MYSQLUSER", "root"),
+            password=os.environ.get("MYSQLPASSWORD", ""),
+            database=os.environ.get("MYSQL_DATABASE", "property_app"),
+            port=int(os.environ.get("MYSQLPORT", 3306))
+        )
 
 cursor = db.cursor(dictionary=True)
 
-# LOAD MODEL AI
+@app.before_request
+def before_request():
+    get_db_connection()
+
 model = joblib.load("property_model.pkl")
 
 @app.route("/")
