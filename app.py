@@ -8,6 +8,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+db = None
+cursor = None
+
 def get_db_connection():
     global db, cursor
     try:
@@ -20,8 +23,10 @@ def get_db_connection():
             database=os.environ.get("MYSQL_DATABASE", "property_app"),
             port=int(os.environ.get("MYSQLPORT", 3306))
         )
+        cursor = db.cursor(dictionary=True)
 
-cursor = db.cursor(dictionary=True)
+# Buat koneksi pertama kali saat aplikasi start
+get_db_connection()
 
 @app.before_request
 def before_request():
